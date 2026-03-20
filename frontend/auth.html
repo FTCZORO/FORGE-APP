@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FORGE — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #242424;
+      --border2: #2e2e2e;
+      --red: #ff2d2d;
+      --red2: #ff5a5a;
+      --red-glow: rgba(255,45,45,0.15);
+      --red-dim: rgba(255,45,45,0.07);
+      --text: #f5f5f5;
+      --text2: #a0a0a0;
+      --text3: #555;
+      --white: #ffffff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* LEFT PANEL */
+    .left {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .left::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(255,45,45,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .left::after {
+      content: '';
+      position: absolute;
+      bottom: -50px; right: -50px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(255,45,45,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 40px; height: 40px;
+      background: var(--red);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+      letter-spacing: 1px;
+    }
+
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .left-content { z-index: 1; }
+
+    .left-tagline {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 42px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .left-tagline span { color: var(--red); }
+
+    .left-sub {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 360px;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 1;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .feature-dot {
+      width: 6px; height: 6px;
+      background: var(--red);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* RIGHT PANEL */
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 36px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .auth-tab {
+      padding: 12px 24px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text3);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+    }
+
+    .auth-tab.active { color: var(--white); }
+
+    .auth-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 2px;
+      background: var(--red);
+    }
+
+    .auth-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .auth-sub {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 32px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    input {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 13px 16px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--red-glow);
+    }
+
+    input::placeholder { color: var(--text3); }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .btn-submit:hover { background: var(--red2); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,45,45,0.3); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      background: rgba(255,45,45,0.08);
+      border: 1px solid rgba(255,45,45,0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--red2);
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .divider {
+      text-align: center;
+      color: var(--text3);
+      font-size: 12px;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+
+    .switch-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 20px;
+    }
+
+    .switch-link button {
+      background: none;
+      border: none;
+      color: var(--red);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    .switch-link button:hover { color: var(--red2); }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left { display: none; }
+      .right { padding: 32px 24px; align-items: flex-start; padding-top: 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left">
+  <div class="brand">
+    <div class="brand-mark">FRG</div>
+    <div class="brand-name">Forge</div>
+  </div>
+
+  <div class="left-content">
+    <div class="left-tagline">Your AI coach<br>that <span>actually</span><br>knows your data.</div>
+    <div class="left-sub">Track macros, log sessions, measure progress. Then let AI tell you exactly where to improve — no generic advice.</div>
+  </div>
+
+  <div class="features">
+    <div class="feature"><div class="feature-dot"></div>Personalized AI coaching based on your real logs</div>
+    <div class="feature"><div class="feature-dot"></div>Macro & workout tracking built for lifters</div>
+    <div class="feature"><div class="feature-dot"></div>Body measurement progress over time</div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="auth-box">
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to your Forge account</div>
+      <div class="error-msg" id="login-error"></div>
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()"/></div>
+      <button class="btn-submit" onclick="login()" id="login-btn">Sign In</button>
+      <div class="switch-link">Don't have an account? <button onclick="switchTab('signup')">Create one</button></div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup-form" style="display:none">
+      <div class="auth-title">Create account</div>
+      <div class="auth-sub">Start tracking. Start improving.</div>
+      <div class="error-msg" id="signup-error"></div>
+      <div class="field"><label>Name</label><input type="text" id="signup-name" placeholder="Rafael"/></div>
+      <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter') signup()"/></div>
+      <button class="btn-submit" onclick="signup()" id="signup-btn">Create Account</button>
+      <div class="switch-link">Already have an account? <button onclick="switchTab('login')">Sign in</button></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // If already logged in, redirect to app
+  if (localStorage.getItem('forge_token')) {
+    window.location.href = '/';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+    });
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideError(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  async function login() {
+    hideError('login-error');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-pass').value;
+    if (!email || !password) return showError('login-error', 'Please fill in all fields');
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('login-error', data.error); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+      localStorage.setItem('forge_token', data.token);
+      localStorage.setItem('forge_user', JSON.stringify(data.user));
+      window.location.href = '/';
+    } catch (e) {
+      showError('login-error', 'Something went wrong. Try again.');
+      btn.disabled = false; btn.textContent = 'Sign In';
+    }
+  }
+
+  async function signup() {
+    hideError('signup-error');
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-pass').value;
+    if (!name || !email || !password) return showError('signup-error', 'Please fill in all fields');
+    if (password.length < 6) return showError('signup-error', 'Password must be at least 6 characters');
+
+    const btn = document.getElementById('signup-btn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('signup-error', data.error); btn.disabled = false; btn.textContent = 'Create Account'; return; }
+      localStorage.setItem('forge_token', data.token);
+      localStorage.setItem('forge_user', JSON.stringify(data.user));
+      window.location.href = '/';
+    } catch (e) {
+      showError('signup-error', 'Something went wrong. Try again.');
+      btn.disabled = false; btn.textContent = 'Create Account';
+    }
+  }
+</script>
+</body>
+</html>

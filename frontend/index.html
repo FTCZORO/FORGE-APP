@@ -731,8 +731,8 @@
             <input type="date" id="b-date"/>
           </div>
           <div class="form-group">
-            <div class="form-label">Weight (kg)</div>
-            <input type="number" id="b-weight" placeholder="85" step="0.1"/>
+            <div class="form-label">Weight (lbs)</div>
+            <input type="number" id="b-weight" placeholder="185" step="0.1"/>
           </div>
         </div>
         <div class="form-row">
@@ -741,24 +741,24 @@
             <input type="number" id="b-bf" placeholder="12" step="0.1"/>
           </div>
           <div class="form-group">
-            <div class="form-label">Chest (cm)</div>
-            <input type="number" id="b-chest" placeholder="110"/>
+            <div class="form-label">Chest (in)</div>
+            <input type="number" id="b-chest" placeholder="42"/>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <div class="form-label">Waist (cm)</div>
-            <input type="number" id="b-waist" placeholder="82"/>
+            <div class="form-label">Waist (in)</div>
+            <input type="number" id="b-waist" placeholder="32"/>
           </div>
           <div class="form-group">
-            <div class="form-label">Hips (cm)</div>
-            <input type="number" id="b-hips" placeholder="98"/>
+            <div class="form-label">Hips (in)</div>
+            <input type="number" id="b-hips" placeholder="38"/>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <div class="form-label">Arms (cm)</div>
-            <input type="number" id="b-arms" placeholder="40"/>
+            <div class="form-label">Arms (in)</div>
+            <input type="number" id="b-arms" placeholder="15"/>
           </div>
           <div class="form-group">
             <div class="form-label">Notes</div>
@@ -955,7 +955,7 @@
         </div>
         <div class="log-pills">
           <div class="pill red"><strong>${l.muscleGroup}</strong></div>
-          ${l.exercises.map(e => `<div class="pill"><strong>${e.name}</strong>${e.sets ? ` ${e.sets}×${e.reps}` : ''}${e.weight ? ` @${e.weight}kg` : ''}</div>`).join('')}
+          ${l.exercises.map(e => `<div class="pill"><strong>${e.name}</strong>${e.sets ? ` ${e.sets}×${e.reps}` : ''}${e.weight ? ` @${e.weight}lbs` : ''}</div>`).join('')}
         </div>
       </div>`).join('');
   }
@@ -976,11 +976,11 @@
     if (!logs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📏</div>No measurements yet</div>'; return; }
     el.innerHTML = logs.map(l => {
       const parts = [];
-      if (l.weight) parts.push(`<div class="pill red"><strong>${l.weight}</strong>kg</div>`);
+      if (l.weight) parts.push(`<div class="pill red"><strong>${l.weight}</strong>lbs</div>`);
       if (l.bodyFat) parts.push(`<div class="pill"><strong>${l.bodyFat}</strong>% BF</div>`);
-      if (l.waist) parts.push(`<div class="pill">Waist <strong>${l.waist}</strong>cm</div>`);
-      if (l.arms) parts.push(`<div class="pill">Arms <strong>${l.arms}</strong>cm</div>`);
-      if (l.chest) parts.push(`<div class="pill">Chest <strong>${l.chest}</strong>cm</div>`);
+      if (l.waist) parts.push(`<div class="pill">Waist <strong>${l.waist}</strong>in</div>`);
+      if (l.arms) parts.push(`<div class="pill">Arms <strong>${l.arms}</strong>in</div>`);
+      if (l.chest) parts.push(`<div class="pill">Chest <strong>${l.chest}</strong>in</div>`);
       return `<div class="log-item"><div class="log-top"><div class="log-date">${fmtDate(l.date)}</div><button class="btn-ghost" onclick="delBody('${l._id}')">✕</button></div><div class="log-pills">${parts.join('')}</div></div>`;
     }).join('');
   }
@@ -1000,7 +1000,7 @@
     document.getElementById('dash-prot').innerHTML = tm ? `${tm.protein}<span>g</span>` : `—<span>g</span>`;
     const weekAgo = new Date(Date.now() - 7*24*60*60*1000);
     document.getElementById('dash-sess').textContent = workouts.filter(w => new Date(w.date) >= weekAgo).length;
-    document.getElementById('dash-wt').innerHTML = body[0] ? `${body[0].weight || '—'}<span>kg</span>` : `—<span>kg</span>`;
+    document.getElementById('dash-wt').innerHTML = body[0] ? `${body[0].weight || '—'}<span>lbs</span>` : `—<span>lbs</span>`;
     const ml = document.getElementById('dash-macro-list');
     ml.innerHTML = macros.slice(0, 3).map(l => `<div class="log-item"><div class="log-top"><div class="log-date">${fmtDate(l.date)}</div></div><div class="log-pills"><div class="pill red"><strong>${l.calories}</strong>kcal</div><div class="pill"><strong>${l.protein}</strong>g P</div><div class="pill"><strong>${l.carbs}</strong>g C</div><div class="pill"><strong>${l.fat}</strong>g F</div></div></div>`).join('') || '<div class="empty"><div class="empty-icon">🍗</div>No macros yet</div>';
     const wl = document.getElementById('dash-workout-list');

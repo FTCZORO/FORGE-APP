@@ -4,13 +4,12 @@ const Anthropic = require("@anthropic-ai/sdk");
 const MacroLog = require("../models/MacroLog");
 const WorkoutLog = require("../models/WorkoutLog");
 const BodyLog = require("../models/BodyLog");
+const auth = require("../middleware/auth");
 
 const client = new Anthropic();
 
-// Build a weekly summary string from DB data
-async function buildUserContext(userId = "default_user") {
+async function buildUserContext(userId) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
   const macros = await MacroLog.find({ userId, date: { $gte: sevenDaysAgo } }).sort({ date: 1 });
   const workouts = await WorkoutLog.find({ userId, date: { $gte: sevenDaysAgo } }).sort({ date: 1 });
   const bodyLogs = await BodyLog.find({ userId }).sort({ date: -1 }).limit(2);
@@ -26,7 +25,7 @@ async function buildUserContext(userId = "default_user") {
     ? workouts.map(w => {
         const dateStr = new Date(w.date).toDateString();
         const exList = w.exercises.map(e =>
-          `${e.name}${e.sets ? ` ${e.sets}x${e.reps}` : ""}${e.weight ? ` @ ${e.weight}kg` : ""}${e.duration ? ` ${e.duration}min` : ""}`
+          `${e.name}${e.sets ? ` ${e.sets}x${e.reps}` : ""}${e.weight ? ` @ ${e.weight}lbs` : ""}${e.duration ? ` ${e.duration}min` : ""}`
         ).join(", ");
         return `  ${dateStr}: ${w.muscleGroup} — ${exList}`;
       }).join("\n")
@@ -36,16 +35,15 @@ async function buildUserContext(userId = "default_user") {
     ? bodyLogs.map(b => {
         const dateStr = new Date(b.date).toDateString();
         const parts = [];
-        if (b.weight) parts.push(`Weight: ${b.weight}kg`);
+        if (b.weight) parts.push(`Weight: ${b.weight}lbs`);
         if (b.bodyFat) parts.push(`Body Fat: ${b.bodyFat}%`);
-        if (b.waist) parts.push(`Waist: ${b.waist}cm`);
+        if (b.waist) parts.push(`Waist: ${b.waist}in`);
         return `  ${dateStr}: ${parts.join(" | ")}`;
       }).join("\n")
     : "  No body measurements logged yet.";
 
   return `
 === USER'S DATA (Last 7 Days) ===
-
 MACRO LOGS:
 ${macroSummary}
 
@@ -58,22 +56,28 @@ ${bodySummary}
 `;
 }
 
-// POST /api/ai/chat
-router.post("/chat", async (req, res) => {
+router.post("/chat", auth, async (req, res) => {
   try {
     const { message, conversationHistory = [] } = req.body;
+    const userContext = await buildUserContext(req.userId);
 
-    const userContext = await buildUserContext();
+    const systemPrompt = `You are Forge Coach, a sharp personalized fitness and nutrition AI coach. Use American units always (lbs, inches, kcal). You have access to the user's real logged data below.
 
-    const systemPrompt = `You are FitAI, a sharp and personalized fitness and nutrition coach. You have access to the user's real logged data below. Use it to give specific, data-driven advice — not generic tips.
+You can LOG macros and workouts directly when the user tells you what they ate or what workout they did.
 
-When analyzing trends:
-- Point out specific days where macros were off and why it matters
-- Notice patterns like skipped workouts or consecutive training days without rest
-- Compare their current stats to what's typical for their apparent goals
-- Be encouraging but direct — don't sugarcoat, but don't be harsh
+When user describes food eaten, estimate macros and add this EXACTLY at the end of your response:
+<log_macros>
+{"calories": 000, "protein": 00, "carbs": 00, "fat": 00, "notes": "description"}
+</log_macros>
 
-Keep responses concise and actionable. Use bullet points when listing multiple insights.
+When user describes a workout they did, add this EXACTLY at the end of your response:
+<log_workout>
+{"muscleGroup": "Chest", "exercises": [{"name": "Bench Press", "sets": 4, "reps": 8, "weight": 185}], "notes": ""}
+</log_workout>
+
+Only include log blocks when user is clearly describing food they ate or a workout they did. NOT for questions or analysis.
+
+Be direct, data-driven, encouraging but honest. Keep responses concise.
 
 ${userContext}`;
 
@@ -89,7 +93,47 @@ ${userContext}`;
       messages,
     });
 
-    const reply = response.content[0].text;
+    let reply = response.content[0].text;
+
+    // Auto-log macros if AI detected food
+    const macroMatch = reply.match(/<log_macros>([\s\S]*?)<\/log_macros>/);
+    if (macroMatch) {
+      try {
+        const macroData = JSON.parse(macroMatch[1].trim());
+        await MacroLog.create({
+          userId: req.userId,
+          date: new Date(),
+          calories: macroData.calories || 0,
+          protein: macroData.protein || 0,
+          carbs: macroData.carbs || 0,
+          fat: macroData.fat || 0,
+          notes: macroData.notes || "Logged via AI Coach",
+        });
+        reply = reply.replace(/<log_macros>[\s\S]*?<\/log_macros>/, '').trim();
+        reply += '\n\n✅ Macros logged automatically!';
+      } catch (e) {
+        console.error("Failed to log macros:", e);
+      }
+    }
+
+    // Auto-log workout if AI detected one
+    const workoutMatch = reply.match(/<log_workout>([\s\S]*?)<\/log_workout>/);
+    if (workoutMatch) {
+      try {
+        const workoutData = JSON.parse(workoutMatch[1].trim());
+        await WorkoutLog.create({
+          userId: req.userId,
+          date: new Date(),
+          muscleGroup: workoutData.muscleGroup || "General",
+          exercises: workoutData.exercises || [],
+          notes: workoutData.notes || "Logged via AI Coach",
+        });
+        reply = reply.replace(/<log_workout>[\s\S]*?<\/log_workout>/, '').trim();
+        reply += '\n\n✅ Workout logged automatically!';
+      } catch (e) {
+        console.error("Failed to log workout:", e);
+      }
+    }
 
     res.json({
       reply,

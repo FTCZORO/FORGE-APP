@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="theme-color" content="#080808"/>
   <title>Forge</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -632,6 +633,49 @@
         <div class="page-title">Log Macros</div>
       </div>
 
+      <!-- BARCODE SCANNER -->
+      <div id="scanner-wrap" style="display:none">
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px">📷 Scan Barcode</div>
+            <button class="btn-ghost" onclick="closeScanner()">✕ Close</button>
+          </div>
+          <video id="scanner-video" style="width:100%;border-radius:10px;background:#000;max-height:220px;object-fit:cover" autoplay playsinline></video>
+          <div id="scanner-status" style="text-align:center;color:var(--text3);font-size:13px;margin-top:10px">Point camera at barcode...</div>
+        </div>
+        <!-- FOOD RESULT -->
+        <div id="food-result" style="display:none" class="card">
+          <div id="food-name" style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px"></div>
+          <div id="food-brand" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" id="food-macros-display"></div>
+          <div class="form-label" style="margin-bottom:8px">Serving Size</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div class="form-group">
+              <div class="form-label">Amount</div>
+              <input type="number" id="serving-amount" value="1" step="0.25" oninput="updateMacros()"/>
+            </div>
+            <div class="form-group">
+              <div class="form-label">Unit</div>
+              <select id="serving-unit" onchange="updateMacros()">
+                <option value="serving">Serving</option>
+                <option value="g">Grams (g)</option>
+                <option value="oz">Ounces (oz)</option>
+                <option value="cup">Cups</option>
+                <option value="ml">Milliliters (ml)</option>
+                <option value="lbs">Pounds (lbs)</option>
+                <option value="tbsp">Tablespoon</option>
+                <option value="tsp">Teaspoon</option>
+              </select>
+            </div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:16px" id="calculated-macros">
+          </div>
+          <button class="btn-primary" onclick="logScannedFood()">Log This Food</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="openScanner()" style="margin-bottom:12px;background:var(--surface);border:1px solid var(--border2);color:var(--text)" id="scan-btn">📷 Scan Barcode</button>
+
       <div class="card">
         <div class="form-row">
           <div class="form-group">
@@ -1040,6 +1084,199 @@
   }
 
   function scrollChat() { const c = document.getElementById('chat-msgs'); c.scrollTop = c.scrollHeight; }
+
+
+  // ── BARCODE SCANNER ──
+  let scannerStream = null;
+  let scannerInterval = null;
+  let currentFoodData = null;
+  let perGramMacros = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  let servingGrams = 100;
+
+  async function openScanner() {
+    document.getElementById('scanner-wrap').style.display = 'block';
+    document.getElementById('scan-btn').style.display = 'none';
+    document.getElementById('food-result').style.display = 'none';
+    document.getElementById('scanner-status').textContent = 'Point camera at barcode...';
+
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      document.getElementById('scanner-video').srcObject = scannerStream;
+
+      // Load barcode detector
+      if ('BarcodeDetector' in window) {
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'] });
+        const video = document.getElementById('scanner-video');
+        scannerInterval = setInterval(async () => {
+          try {
+            const barcodes = await detector.detect(video);
+            if (barcodes.length > 0) {
+              clearInterval(scannerInterval);
+              lookupBarcode(barcodes[0].rawValue);
+            }
+          } catch(e) {}
+        }, 500);
+      } else {
+        // Fallback: manual barcode entry
+        document.getElementById('scanner-status').innerHTML = 
+          'Camera scanning not supported on this browser.<br><br>' +
+          '<input type="text" placeholder="Type barcode number..." id="manual-barcode" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:white;padding:10px;font-size:16px;margin-bottom:8px"/>' +
+          '<button onclick="lookupBarcode(document.getElementById('manual-barcode').value)" style="width:100%;background:var(--red);color:white;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer">Look Up</button>';
+      }
+    } catch(e) {
+      document.getElementById('scanner-status').innerHTML = 
+        'Camera access denied.<br><br>' +
+        '<input type="text" placeholder="Type barcode number..." id="manual-barcode" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:white;padding:10px;font-size:16px;margin-bottom:8px"/>' +
+        '<button onclick="lookupBarcode(document.getElementById('manual-barcode').value)" style="width:100%;background:var(--red);color:white;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer">Look Up</button>';
+    }
+  }
+
+  function closeScanner() {
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(t => t.stop());
+      scannerStream = null;
+    }
+    if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
+    document.getElementById('scanner-wrap').style.display = 'none';
+    document.getElementById('scan-btn').style.display = 'block';
+  }
+
+  async function lookupBarcode(barcode) {
+    if (!barcode) return;
+    document.getElementById('scanner-status').textContent = 'Looking up product...';
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+      const data = await res.json();
+
+      if (data.status === 0 || !data.product) {
+        document.getElementById('scanner-status').textContent = 'Product not found. Try another barcode.';
+        return;
+      }
+
+      const p = data.product;
+      const nutriments = p.nutriments || {};
+
+      currentFoodData = {
+        name: p.product_name || 'Unknown Product',
+        brand: p.brands || '',
+        calories100g: nutriments['energy-kcal_100g'] || nutriments['energy-kcal'] || 0,
+        protein100g: nutriments['proteins_100g'] || 0,
+        carbs100g: nutriments['carbohydrates_100g'] || 0,
+        fat100g: nutriments['fat_100g'] || 0,
+        servingSize: p.serving_size || '100g',
+        servingGrams: parseServingGrams(p.serving_size),
+      };
+
+      perGramMacros = {
+        calories: currentFoodData.calories100g / 100,
+        protein: currentFoodData.protein100g / 100,
+        carbs: currentFoodData.carbs100g / 100,
+        fat: currentFoodData.fat100g / 100,
+      };
+
+      servingGrams = currentFoodData.servingGrams;
+
+      document.getElementById('food-name').textContent = currentFoodData.name;
+      document.getElementById('food-brand').textContent = currentFoodData.brand;
+      document.getElementById('food-macros-display').innerHTML = `
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CALORIES</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--red)">${Math.round(currentFoodData.calories100g)}</div>
+          <div style="font-size:10px;color:var(--text3)">per 100g</div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PROTEIN</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">${Math.round(currentFoodData.protein100g)}g</div>
+          <div style="font-size:10px;color:var(--text3)">per 100g</div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">CARBS</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">${Math.round(currentFoodData.carbs100g)}g</div>
+          <div style="font-size:10px;color:var(--text3)">per 100g</div>
+        </div>
+        <div style="text-align:center;background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">FAT</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px">${Math.round(currentFoodData.fat100g)}g</div>
+          <div style="font-size:10px;color:var(--text3)">per 100g</div>
+        </div>
+      `;
+
+      document.getElementById('serving-amount').value = 1;
+      document.getElementById('serving-unit').value = 'serving';
+      updateMacros();
+
+      document.getElementById('food-result').style.display = 'block';
+      document.getElementById('scanner-video').style.display = 'none';
+      document.getElementById('scanner-status').style.display = 'none';
+
+      // Stop camera
+      if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); }
+      if (scannerInterval) { clearInterval(scannerInterval); }
+
+    } catch(e) {
+      document.getElementById('scanner-status').textContent = 'Error looking up product. Check connection.';
+    }
+  }
+
+  function parseServingGrams(servingStr) {
+    if (!servingStr) return 100;
+    const match = servingStr.match(/([\d.]+)\s*(g|ml|oz|cup|tbsp|tsp)/i);
+    if (!match) return 100;
+    const amount = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    const conversions = { g: 1, ml: 1, oz: 28.35, cup: 240, tbsp: 15, tsp: 5 };
+    return amount * (conversions[unit] || 1);
+  }
+
+  function getGramsFromUnit(amount, unit) {
+    const conversions = { serving: servingGrams, g: 1, oz: 28.35, cup: 240, ml: 1, lbs: 453.6, tbsp: 15, tsp: 5 };
+    return amount * (conversions[unit] || 1);
+  }
+
+  function updateMacros() {
+    if (!currentFoodData) return;
+    const amount = parseFloat(document.getElementById('serving-amount').value) || 1;
+    const unit = document.getElementById('serving-unit').value;
+    const grams = getGramsFromUnit(amount, unit);
+
+    const cal = Math.round(perGramMacros.calories * grams);
+    const prot = Math.round(perGramMacros.protein * grams);
+    const carbs = Math.round(perGramMacros.carbs * grams);
+    const fat = Math.round(perGramMacros.fat * grams);
+
+    document.getElementById('calculated-macros').innerHTML = `
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">FOR ${amount} ${unit.toUpperCase()}${amount !== 1 ? 'S' : ''}:</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+        <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--red)">${cal}</div><div style="font-size:10px;color:var(--text3)">kcal</div></div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${prot}g</div><div style="font-size:10px;color:var(--text3)">protein</div></div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${carbs}g</div><div style="font-size:10px;color:var(--text3)">carbs</div></div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${fat}g</div><div style="font-size:10px;color:var(--text3)">fat</div></div>
+      </div>
+    `;
+  }
+
+  async function logScannedFood() {
+    if (!currentFoodData) return;
+    const amount = parseFloat(document.getElementById('serving-amount').value) || 1;
+    const unit = document.getElementById('serving-unit').value;
+    const grams = getGramsFromUnit(amount, unit);
+
+    const data = {
+      date: document.getElementById('m-date').value,
+      calories: Math.round(perGramMacros.calories * grams),
+      protein: Math.round(perGramMacros.protein * grams),
+      carbs: Math.round(perGramMacros.carbs * grams),
+      fat: Math.round(perGramMacros.fat * grams),
+      notes: `${currentFoodData.name} (${amount} ${unit})`,
+    };
+
+    await apiFetch('/api/macros', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    toast('✅ ' + currentFoodData.name + ' logged!');
+    closeScanner();
+    loadMacros();
+  }
 
   // Init
   loadDash();

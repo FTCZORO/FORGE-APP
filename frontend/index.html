@@ -110,12 +110,85 @@
 </head>
 <body>
 
+
+  <!-- ONBOARDING -->
+  <div id="onboarding-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 24px">
+    <div style="max-width:480px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:40px">
+        <div style="width:56px;height:56px;background:var(--red);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;font-size:22px;color:white;margin:0 auto 16px">FRG</div>
+        <div style="font-family:Syne,sans-serif;font-weight:800;font-size:28px;margin-bottom:8px">Welcome to Forge</div>
+        <div style="font-size:14px;color:var(--text2)">Let's set up your profile so your AI coach knows exactly how to help you.</div>
+      </div>
+
+      <div id="ob-step-1">
+        <div style="font-family:Syne,sans-serif;font-weight:800;font-size:18px;margin-bottom:20px">What's your goal? 🎯</div>
+        <div id="goal-options" style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <button class="goal-btn" onclick="selectGoal('bulk')" data-goal="bulk" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;text-align:left;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent">
+            <div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:4px">💪 Build Muscle</div>
+            <div style="font-size:13px;color:var(--text2)">Gain size and strength, eat in a surplus</div>
+          </button>
+          <button class="goal-btn" onclick="selectGoal('cut')" data-goal="cut" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;text-align:left;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent">
+            <div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:4px">🔥 Lose Fat</div>
+            <div style="font-size:13px;color:var(--text2)">Get lean while preserving muscle</div>
+          </button>
+          <button class="goal-btn" onclick="selectGoal('maintain')" data-goal="maintain" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;text-align:left;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent">
+            <div style="font-family:Syne,sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:4px">⚖️ Maintain</div>
+            <div style="font-size:13px;color:var(--text2)">Stay at current weight, improve performance</div>
+          </button>
+        </div>
+        <button class="btn-primary" onclick="obNext1()" style="opacity:0.5" id="ob-next-1">Continue →</button>
+      </div>
+
+      <div id="ob-step-2" style="display:none">
+        <div style="font-family:Syne,sans-serif;font-weight:800;font-size:18px;margin-bottom:20px">Your details 📋</div>
+        <div class="form-group"><div class="form-label">Activity Level</div>
+          <select id="ob-activity">
+            <option value="sedentary">Sedentary (desk job, no exercise)</option>
+            <option value="light">Light (1-3 days/week)</option>
+            <option value="moderate" selected>Moderate (3-5 days/week)</option>
+            <option value="active">Active (6-7 days/week)</option>
+            <option value="very_active">Very Active (2x/day or physical job)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Age</div><input type="number" id="ob-age" placeholder="25"/></div>
+          <div class="form-group"><div class="form-label">Height (in)</div><input type="number" id="ob-height" placeholder="70"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Weight (lbs)</div><input type="number" id="ob-weight" placeholder="185"/></div>
+          <div class="form-group"><div class="form-label">Body Fat %</div><input type="number" id="ob-bf" placeholder="15"/></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-primary" onclick="document.getElementById('ob-step-2').style.display='none';document.getElementById('ob-step-1').style.display='block'" style="background:var(--surface);border:1px solid var(--border2);color:var(--text2)">← Back</button>
+          <button class="btn-primary" onclick="obNext2()">Continue →</button>
+        </div>
+      </div>
+
+      <div id="ob-step-3" style="display:none">
+        <div style="font-family:Syne,sans-serif;font-weight:800;font-size:18px;margin-bottom:8px">Your daily targets 🎯</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px">We calculated these based on your info. Adjust if needed.</div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Calories</div><input type="number" id="ob-cal" placeholder="2800"/></div>
+          <div class="form-group"><div class="form-label">Protein (g)</div><input type="number" id="ob-prot" placeholder="200"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Carbs (g)</div><input type="number" id="ob-carbs" placeholder="300"/></div>
+          <div class="form-group"><div class="form-label">Fat (g)</div><input type="number" id="ob-fat" placeholder="80"/></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-primary" onclick="document.getElementById('ob-step-3').style.display='none';document.getElementById('ob-step-2').style.display='block'" style="background:var(--surface);border:1px solid var(--border2);color:var(--text2)">← Back</button>
+          <button class="btn-primary" onclick="finishOnboarding()">Let's Go! 🚀</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <div class="desktop-side" style="display:none">
   <div style="width:32px;height:32px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-weight:800;font-size:13px;color:white;margin-bottom:28px">FRG</div>
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon">⚡</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Home</span></button>
   <button class="nav-btn" onclick="showPage('macros')"><span class="nav-icon">🔥</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Macros</span></button>
   <button class="nav-btn" onclick="showPage('workouts')"><span class="nav-icon">💪</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Lifts</span></button>
-  <button class="nav-btn" onclick="showPage('body')"><span class="nav-icon">📏</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Body</span></button>
+  <button class="nav-btn" onclick="showPage('progress')"><span class="nav-icon">📈</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Progress</span></button>
   <button class="nav-btn" onclick="showPage('ai')"><span class="nav-icon">🤖</span><span class="nav-label" style="font-size:9px;color:var(--text3)">Coach</span></button>
 </div>
 
@@ -229,6 +302,78 @@
     </div>
   </div>
 
+
+  <!-- PROFILE -->
+  <div id="page-profile" class="page">
+    <div class="content">
+      <div class="page-header"><div class="page-eyebrow">Account</div><div class="page-title">My Profile</div></div>
+      <div class="card">
+        <div class="section-title">Goals</div>
+        <div class="form-group"><div class="form-label">My Goal</div>
+          <select id="prof-goal">
+            <option value="bulk">💪 Build Muscle</option>
+            <option value="cut">🔥 Lose Fat</option>
+            <option value="maintain">⚖️ Maintain</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Activity Level</div>
+          <select id="prof-activity">
+            <option value="sedentary">Sedentary</option>
+            <option value="light">Light (1-3 days/week)</option>
+            <option value="moderate">Moderate (3-5 days/week)</option>
+            <option value="active">Active (6-7 days/week)</option>
+            <option value="very_active">Very Active</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Daily Targets</div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Calories</div><input type="number" id="prof-cal" placeholder="2800"/></div>
+          <div class="form-group"><div class="form-label">Protein (g)</div><input type="number" id="prof-prot" placeholder="200"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Carbs (g)</div><input type="number" id="prof-carbs" placeholder="300"/></div>
+          <div class="form-group"><div class="form-label">Fat (g)</div><input type="number" id="prof-fat" placeholder="80"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Body Stats</div>
+        <div class="form-row">
+          <div class="form-group"><div class="form-label">Age</div><input type="number" id="prof-age" placeholder="25"/></div>
+          <div class="form-group"><div class="form-label">Height (in)</div><input type="number" id="prof-height" placeholder="70"/></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
+      <button onclick="logout()" style="width:100%;background:transparent;border:1px solid var(--border2);color:var(--text3);border-radius:12px;padding:16px;font-family:Plus Jakarta Sans,sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS CHARTS -->
+  <div id="page-progress" class="page">
+    <div class="content">
+      <div class="page-header"><div class="page-eyebrow">Trends</div><div class="page-title">Progress</div></div>
+      <div id="streak-banner" style="background:linear-gradient(135deg,#1a0a00,#2a1000);border:1px solid rgba(255,100,0,0.3);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px">
+        <div style="font-size:40px">🔥</div>
+        <div><div style="font-family:Syne,sans-serif;font-weight:800;font-size:24px" id="streak-num">0</div><div style="font-size:13px;color:#ff8c4a">day workout streak</div></div>
+      </div>
+      <div class="card">
+        <div class="section-title">This Week vs Target</div>
+        <div id="macro-progress-bars"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Weight Trend</div>
+        <canvas id="weight-chart" style="width:100%;max-height:200px"></canvas>
+        <div id="weight-empty" style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Log body measurements to see your weight trend</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Calories This Week</div>
+        <canvas id="cal-chart" style="width:100%;max-height:200px"></canvas>
+        <div id="cal-empty" style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Log macros to see your calorie trend</div>
+      </div>
+    </div>
+  </div>
+
   <!-- AI COACH -->
   <div id="page-ai" class="page">
     <div class="chat-wrap">
@@ -262,7 +407,7 @@
   <button class="nav-btn active" onclick="showPage('dashboard')"><span class="nav-icon">⚡</span><span class="nav-label">Home</span></button>
   <button class="nav-btn" onclick="showPage('macros')"><span class="nav-icon">🔥</span><span class="nav-label">Macros</span></button>
   <button class="nav-btn" onclick="showPage('workouts')"><span class="nav-icon">💪</span><span class="nav-label">Lifts</span></button>
-  <button class="nav-btn" onclick="showPage('body')"><span class="nav-icon">📏</span><span class="nav-label">Body</span></button>
+  <button class="nav-btn" onclick="showPage('progress')"><span class="nav-icon">📈</span><span class="nav-label">Progress</span></button>
   <button class="nav-btn" onclick="showPage('ai')"><span class="nav-icon">🤖</span><span class="nav-label">Coach</span></button>
 </nav>
 
@@ -301,15 +446,19 @@
     document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
     document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
     document.getElementById("page-" + name).classList.add("active");
-    var pages = ["dashboard","macros","workouts","body","ai"];
+    var pages = ["dashboard","macros","workouts","progress","ai"];
     var idx = pages.indexOf(name);
-    document.querySelectorAll(".nav-btn")[idx].classList.add("active");
-    var deskBtns = document.querySelectorAll(".desktop-side .nav-btn");
-    if (deskBtns[idx]) deskBtns[idx].classList.add("active");
+    if (idx >= 0) {
+      document.querySelectorAll(".nav-btn")[idx].classList.add("active");
+      var deskBtns = document.querySelectorAll(".desktop-side .nav-btn");
+      if (deskBtns[idx]) deskBtns[idx].classList.add("active");
+    }
     if (name === "dashboard") loadDash();
     if (name === "macros") loadMacros();
     if (name === "workouts") loadWorkouts();
     if (name === "body") loadBody();
+    if (name === "progress") { loadProfile(); loadProgress(); }
+    if (name === "profile") loadProfile();
     window.scrollTo(0, 0);
   }
 
@@ -552,8 +701,273 @@
     loadMacros();
   }
 
+
+  // ONBOARDING
+  var selectedGoal = "";
+  var userProfile = null;
+
+  async function checkOnboarding() {
+    try {
+      var res = await apiFetch("/api/profile");
+      userProfile = await res.json();
+      if (!userProfile.onboardingComplete) {
+        document.getElementById("onboarding-screen").style.display = "block";
+      }
+    } catch(e) {
+      document.getElementById("onboarding-screen").style.display = "block";
+    }
+  }
+
+  function selectGoal(goal) {
+    selectedGoal = goal;
+    document.querySelectorAll(".goal-btn").forEach(function(btn) {
+      if (btn.dataset.goal === goal) {
+        btn.style.borderColor = "var(--red)";
+        btn.style.background = "var(--red-dim)";
+      } else {
+        btn.style.borderColor = "var(--border2)";
+        btn.style.background = "var(--surface)";
+      }
+    });
+    document.getElementById("ob-next-1").style.opacity = "1";
+  }
+
+  function obNext1() {
+    if (!selectedGoal) return toast("Pick a goal first!");
+    document.getElementById("ob-step-1").style.display = "none";
+    document.getElementById("ob-step-2").style.display = "block";
+  }
+
+  function calcTargets(weight, goal, activity, age, height, bf) {
+    var lbm = weight * (1 - (bf || 15) / 100);
+    var bmr = 66 + (6.23 * weight) + (12.7 * (height || 70)) - (6.8 * (age || 25));
+    var actMult = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9 };
+    var tdee = Math.round(bmr * (actMult[activity] || 1.55));
+    var cal = goal === "bulk" ? tdee + 300 : goal === "cut" ? tdee - 400 : tdee;
+    var prot = Math.round(lbm * 1.0);
+    var fat = Math.round(cal * 0.25 / 9);
+    var carbs = Math.round((cal - (prot * 4) - (fat * 9)) / 4);
+    return { cal: Math.max(cal, 1200), prot: prot, carbs: Math.max(carbs, 50), fat: fat };
+  }
+
+  function obNext2() {
+    var weight = +document.getElementById("ob-weight").value || 185;
+    var age = +document.getElementById("ob-age").value || 25;
+    var height = +document.getElementById("ob-height").value || 70;
+    var bf = +document.getElementById("ob-bf").value || 15;
+    var activity = document.getElementById("ob-activity").value;
+    var targets = calcTargets(weight, selectedGoal, activity, age, height, bf);
+    document.getElementById("ob-cal").value = targets.cal;
+    document.getElementById("ob-prot").value = targets.prot;
+    document.getElementById("ob-carbs").value = targets.carbs;
+    document.getElementById("ob-fat").value = targets.fat;
+    document.getElementById("ob-step-2").style.display = "none";
+    document.getElementById("ob-step-3").style.display = "block";
+  }
+
+  async function finishOnboarding() {
+    var data = {
+      goal: selectedGoal,
+      activityLevel: document.getElementById("ob-activity").value,
+      age: +document.getElementById("ob-age").value || undefined,
+      height: +document.getElementById("ob-height").value || undefined,
+      targetCalories: +document.getElementById("ob-cal").value,
+      targetProtein: +document.getElementById("ob-prot").value,
+      targetCarbs: +document.getElementById("ob-carbs").value,
+      targetFat: +document.getElementById("ob-fat").value,
+      onboardingComplete: true
+    };
+    await apiFetch("/api/profile", { method: "PUT", body: JSON.stringify(data) });
+
+    // Also log starting body weight
+    var weight = +document.getElementById("ob-weight").value;
+    if (weight) {
+      await apiFetch("/api/body", { method: "POST", body: JSON.stringify({ date: new Date().toISOString().split("T")[0], weight: weight }) });
+    }
+
+    userProfile = Object.assign(userProfile || {}, data);
+    document.getElementById("onboarding-screen").style.display = "none";
+    toast("Welcome to Forge! 🔥");
+    loadDash();
+  }
+
+  // PROFILE
+  async function loadProfile() {
+    try {
+      var res = await apiFetch("/api/profile");
+      userProfile = await res.json();
+      document.getElementById("prof-goal").value = userProfile.goal || "maintain";
+      document.getElementById("prof-activity").value = userProfile.activityLevel || "moderate";
+      document.getElementById("prof-cal").value = userProfile.targetCalories || "";
+      document.getElementById("prof-prot").value = userProfile.targetProtein || "";
+      document.getElementById("prof-carbs").value = userProfile.targetCarbs || "";
+      document.getElementById("prof-fat").value = userProfile.targetFat || "";
+      document.getElementById("prof-age").value = userProfile.age || "";
+      document.getElementById("prof-height").value = userProfile.height || "";
+    } catch(e) {}
+  }
+
+  async function saveProfile() {
+    var data = {
+      goal: document.getElementById("prof-goal").value,
+      activityLevel: document.getElementById("prof-activity").value,
+      targetCalories: +document.getElementById("prof-cal").value,
+      targetProtein: +document.getElementById("prof-prot").value,
+      targetCarbs: +document.getElementById("prof-carbs").value,
+      targetFat: +document.getElementById("prof-fat").value,
+      age: +document.getElementById("prof-age").value || undefined,
+      height: +document.getElementById("prof-height").value || undefined,
+    };
+    await apiFetch("/api/profile", { method: "PUT", body: JSON.stringify(data) });
+    userProfile = Object.assign(userProfile || {}, data);
+    toast("Profile saved!");
+  }
+
+  function logout() {
+    localStorage.removeItem("forge_token");
+    localStorage.removeItem("forge_user");
+    window.location.href = "/login";
+  }
+
+  // PROGRESS + CHARTS + STREAKS
+  async function loadProgress() {
+    var results = await Promise.all([
+      apiFetch("/api/macros").then(function(r){return r.json();}).catch(function(){return[];}),
+      apiFetch("/api/workouts").then(function(r){return r.json();}).catch(function(){return[];}),
+      apiFetch("/api/body").then(function(r){return r.json();}).catch(function(){return[];})
+    ]);
+    var macros = results[0], workouts = results[1], bodyLogs = results[2];
+
+    // STREAK
+    var streak = calcStreak(workouts);
+    document.getElementById("streak-num").textContent = streak;
+
+    // MACRO PROGRESS BARS
+    if (userProfile) {
+      var todayStr = new Date().toDateString();
+      var todayMacro = macros.find(function(m){ return new Date(m.date).toDateString() === todayStr; });
+      var bars = document.getElementById("macro-progress-bars");
+      if (todayMacro) {
+        bars.innerHTML = makebar("Calories", todayMacro.calories, userProfile.targetCalories, "var(--red)") +
+          makebar("Protein", todayMacro.protein, userProfile.targetProtein, "#4ecdc4") +
+          makebar("Carbs", todayMacro.carbs, userProfile.targetCarbs, "#ffe66d") +
+          makebar("Fat", todayMacro.fat, userProfile.targetFat, "#ff6b6b");
+      } else {
+        bars.innerHTML = "<div style=\"color:var(--text3);font-size:13px;text-align:center;padding:20px\">No macros logged today yet</div>";
+      }
+    }
+
+    // WEIGHT CHART
+    var weightData = bodyLogs.filter(function(b){return b.weight;}).reverse().slice(-14);
+    if (weightData.length > 1) {
+      document.getElementById("weight-empty").style.display = "none";
+      drawChart("weight-chart", weightData.map(function(b){return fmtDate(b.date);}), weightData.map(function(b){return b.weight;}), "Weight (lbs)", "#ff2d2d");
+    }
+
+    // CALORIES CHART
+    var weekAgo = new Date(Date.now() - 7*24*60*60*1000);
+    var weekMacros = macros.filter(function(m){return new Date(m.date) >= weekAgo;}).reverse();
+    if (weekMacros.length > 0) {
+      document.getElementById("cal-empty").style.display = "none";
+      drawChart("cal-chart", weekMacros.map(function(m){return fmtDate(m.date);}), weekMacros.map(function(m){return m.calories;}), "Calories", "#ff8c4a");
+    }
+  }
+
+  function makebar(label, val, target, color) {
+    var pct = Math.min(Math.round((val / (target || 1)) * 100), 100);
+    var over = val > target;
+    return "<div style=\"margin-bottom:16px\"><div style=\"display:flex;justify-content:space-between;margin-bottom:6px\"><span style=\"font-size:13px;font-weight:600\">" + label + "</span><span style=\"font-size:13px;color:var(--text2)\">" + val + " / " + target + "</span></div><div style=\"background:var(--surface2);border-radius:8px;height:10px;overflow:hidden\"><div style=\"height:100%;width:" + pct + "%;background:" + (over ? "#ff8c4a" : color) + ";border-radius:8px;transition:width 0.5s\"></div></div></div>";
+  }
+
+  function calcStreak(workouts) {
+    if (!workouts.length) return 0;
+    var streak = 0;
+    var check = new Date();
+    check.setHours(0,0,0,0);
+    for (var i = 0; i < 60; i++) {
+      var dateStr = check.toDateString();
+      var hasWorkout = workouts.some(function(w){ return new Date(w.date).toDateString() === dateStr; });
+      if (hasWorkout) { streak++; } else if (i > 0) { break; }
+      check.setDate(check.getDate() - 1);
+    }
+    return streak;
+  }
+
+  function drawChart(canvasId, labels, data, label, color) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.parentElement.offsetWidth - 40;
+    var H = 180;
+    canvas.width = W;
+    canvas.height = H;
+    var pad = { t:20, r:10, b:40, l:50 };
+    var min = Math.min.apply(null, data) * 0.95;
+    var max = Math.max.apply(null, data) * 1.05;
+    var xStep = (W - pad.l - pad.r) / Math.max(labels.length - 1, 1);
+    var yScale = (H - pad.t - pad.b) / (max - min || 1);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = "#242424";
+    ctx.lineWidth = 1;
+    for (var g = 0; g <= 4; g++) {
+      var y = pad.t + (H - pad.t - pad.b) * g / 4;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.fillStyle = "#555";
+      ctx.font = "10px Plus Jakarta Sans";
+      ctx.textAlign = "right";
+      ctx.fillText(Math.round(max - (max-min)*g/4), pad.l - 4, y + 4);
+    }
+
+    // Line
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    data.forEach(function(val, i) {
+      var x = pad.l + i * xStep;
+      var y = pad.t + (max - val) * yScale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Gradient fill
+    var grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
+    grad.addColorStop(0, color.replace(")", ",0.3)").replace("rgb", "rgba"));
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.beginPath();
+    data.forEach(function(val, i) {
+      var x = pad.l + i * xStep;
+      var y = pad.t + (max - val) * yScale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(pad.l + (data.length-1)*xStep, H-pad.b);
+    ctx.lineTo(pad.l, H-pad.b);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Dots + labels
+    data.forEach(function(val, i) {
+      var x = pad.l + i * xStep;
+      var y = pad.t + (max - val) * yScale;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.fillStyle = "#555";
+      ctx.font = "9px Plus Jakarta Sans";
+      ctx.textAlign = "center";
+      ctx.fillText(labels[i], x, H - pad.b + 14);
+    });
+  }
+
+
   // Init
   loadDash();
+  checkOnboarding();
   addExRow();
 </script>
 </body>

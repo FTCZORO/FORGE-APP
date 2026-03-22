@@ -833,6 +833,12 @@
 
   const API = '';
   let chatHistory = [];
+  const authToken = localStorage.getItem('forge_token');
+
+  async function apiFetch(url, options = {}) {
+    const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken };
+    return fetch(API + url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+  }
 
   // Set today on all date inputs
   const today = new Date().toISOString().split('T')[0];
@@ -873,7 +879,7 @@
   async function saveMacro() {
     const data = { date: document.getElementById('m-date').value, calories: +document.getElementById('m-cal').value, protein: +document.getElementById('m-prot').value, carbs: +document.getElementById('m-carbs').value, fat: +document.getElementById('m-fat').value, notes: document.getElementById('m-notes').value };
     if (!data.calories || !data.protein) return toast('Fill in calories and protein');
-    await fetch(API + '/api/macros', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    await apiFetch('/api/macros', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
     toast('✓ Macros saved!');
     document.getElementById('m-cal').value = '';
     document.getElementById('m-prot').value = '';
@@ -884,7 +890,7 @@
   }
 
   async function loadMacros() {
-    const logs = await fetch(API + '/api/macros').then(r => r.json()).catch(() => []);
+    const logs = await apiFetch('/api/macros').then(r => r.json()).catch(() => []);
     const el = document.getElementById('macro-list');
     if (!logs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>No entries yet</div>'; return; }
     el.innerHTML = logs.map(l => `
@@ -903,7 +909,7 @@
       </div>`).join('');
   }
 
-  async function delMacro(id) { await fetch(API + '/api/macros/' + id, { method:'DELETE' }); toast('Deleted'); loadMacros(); }
+  async function delMacro(id) { await apiFetch('/api/macros/' + id, { method:'DELETE' }); toast('Deleted'); loadMacros(); }
 
   // ── WORKOUTS ──
   function addExRow(ex = {}) {
@@ -930,7 +936,7 @@
     }).filter(e => e.name);
     const data = { date: document.getElementById('w-date').value, muscleGroup: document.getElementById('w-muscle').value, exercises, notes: document.getElementById('w-notes').value };
     if (!data.muscleGroup) return toast('Select a muscle group');
-    await fetch(API + '/api/workouts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    await apiFetch('/api/workouts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
     toast('✓ Session saved!');
     document.getElementById('ex-rows').innerHTML = '';
     addExRow();
@@ -938,7 +944,7 @@
   }
 
   async function loadWorkouts() {
-    const logs = await fetch(API + '/api/workouts').then(r => r.json()).catch(() => []);
+    const logs = await apiFetch('/api/workouts').then(r => r.json()).catch(() => []);
     const el = document.getElementById('workout-list');
     if (!logs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div>No sessions yet</div>'; return; }
     el.innerHTML = logs.map(l => `
@@ -954,18 +960,18 @@
       </div>`).join('');
   }
 
-  async function delWorkout(id) { await fetch(API + '/api/workouts/' + id, { method:'DELETE' }); toast('Deleted'); loadWorkouts(); }
+  async function delWorkout(id) { await apiFetch('/api/workouts/' + id, { method:'DELETE' }); toast('Deleted'); loadWorkouts(); }
 
   // ── BODY ──
   async function saveBody() {
     const data = { date: document.getElementById('b-date').value, weight: +document.getElementById('b-weight').value || undefined, bodyFat: +document.getElementById('b-bf').value || undefined, chest: +document.getElementById('b-chest').value || undefined, waist: +document.getElementById('b-waist').value || undefined, hips: +document.getElementById('b-hips').value || undefined, arms: +document.getElementById('b-arms').value || undefined, notes: document.getElementById('b-notes').value };
-    await fetch(API + '/api/body', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    await apiFetch('/api/body', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
     toast('✓ Measurements saved!');
     loadBody();
   }
 
   async function loadBody() {
-    const logs = await fetch(API + '/api/body').then(r => r.json()).catch(() => []);
+    const logs = await apiFetch('/api/body').then(r => r.json()).catch(() => []);
     const el = document.getElementById('body-list');
     if (!logs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📏</div>No measurements yet</div>'; return; }
     el.innerHTML = logs.map(l => {
@@ -979,14 +985,14 @@
     }).join('');
   }
 
-  async function delBody(id) { await fetch(API + '/api/body/' + id, { method:'DELETE' }); toast('Deleted'); loadBody(); }
+  async function delBody(id) { await apiFetch('/api/body/' + id, { method:'DELETE' }); toast('Deleted'); loadBody(); }
 
   // ── DASHBOARD ──
   async function loadDash() {
     const [macros, workouts, body] = await Promise.all([
-      fetch(API + '/api/macros').then(r => r.json()).catch(() => []),
-      fetch(API + '/api/workouts').then(r => r.json()).catch(() => []),
-      fetch(API + '/api/body').then(r => r.json()).catch(() => []),
+      apiFetch('/api/macros').then(r => r.json()).catch(() => []),
+      apiFetch('/api/workouts').then(r => r.json()).catch(() => []),
+      apiFetch('/api/body').then(r => r.json()).catch(() => []),
     ]);
     const todayStr = new Date().toDateString();
     const tm = macros.find(m => new Date(m.date).toDateString() === todayStr);
@@ -1013,7 +1019,7 @@
     document.getElementById('typing').classList.add('show');
     scrollChat();
     try {
-      const res = await fetch(API + '/api/ai/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: msg, conversationHistory: chatHistory }) });
+      const res = await apiFetch('/api/ai/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: msg, conversationHistory: chatHistory }) });
       const data = await res.json();
       chatHistory = data.updatedHistory;
       document.getElementById('typing').classList.remove('show');

@@ -1143,6 +1143,26 @@
     document.getElementById('scan-btn').style.display = 'block';
   }
 
+
+  function showManualEntry() {
+    const el = document.getElementById('scanner-status');
+    el.innerHTML = 'Camera not available. Enter barcode manually:';
+    const wrap = document.createElement('div');
+    wrap.style.marginTop = '10px';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.id = 'manual-barcode';
+    inp.placeholder = 'Type barcode number...';
+    inp.style.cssText = 'width:100%;background:#1c1c1c;border:1px solid #2e2e2e;border-radius:8px;color:white;padding:10px;font-size:16px;margin-bottom:8px;display:block';
+    const btn = document.createElement('button');
+    btn.textContent = 'Look Up';
+    btn.style.cssText = 'width:100%;background:#ff2d2d;color:white;border:none;border-radius:8px;padding:12px;font-weight:700;cursor:pointer;font-size:15px';
+    btn.onclick = () => lookupBarcode(document.getElementById('manual-barcode').value);
+    wrap.appendChild(inp);
+    wrap.appendChild(btn);
+    el.appendChild(wrap);
+  }
+
   async function lookupBarcode(barcode) {
     if (!barcode) return;
     document.getElementById('scanner-status').textContent = 'Looking up product...';
